@@ -16,6 +16,10 @@ on:
 env:
   PDF_NAME: Mastering-New-Python-Libraries
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-pdf:
     runs-on: ubuntu-latest
