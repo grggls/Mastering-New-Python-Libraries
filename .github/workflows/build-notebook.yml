@@ -3,6 +3,7 @@ name: Build Interactive Notebook
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
     paths:
       - 'README.md'
       - 'convert_to_notebook.py'
@@ -40,6 +41,17 @@ jobs:
         name: interactive-notebook
         path: Mastering-New-Python-Libraries.ipynb
         retention-days: 30
+        
+    - name: Create Release with Notebook (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: Mastering-New-Python-Libraries.ipynb
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Comment on PR
       if: github.event_name == 'pull_request'

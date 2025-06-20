@@ -90,7 +90,7 @@ jobs:
     - name: Create PDF from README
       run: |
         pandoc README.md \
-          -o "${PDF_NAME}-v${{ steps.version.outputs.version }}.pdf" \
+          -o "${{ steps.version.outputs.PDF_NAME }}.pdf" \
           --pdf-engine=xelatex \
           --variable=geometry:margin=1in \
           --variable=fontsize:11pt \
