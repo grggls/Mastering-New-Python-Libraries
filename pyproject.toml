@@ -1,0 +1,12 @@
+[project]
+name = "library-exploration"
+version = "0.1.0"
+description = "Playing with Python library exploration examples"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.0.3",
+    "requests>=2.32.4",
+    "google-adk>=0.0.1",
+    "numpy>=2.3.0",
+    "ipykernel>=6.29.5",
+]

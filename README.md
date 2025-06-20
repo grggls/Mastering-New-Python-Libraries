@@ -1,7 +1,9 @@
 # 🐍 Mastering Python Libraries: An Interactive Exploration Guide
 *From first import to production-ready code: a systematic approach to understanding any Python package*
 
-**Author**: Gregory Damiani / [@grggls](https://github.com/grggls)
+**Author**: Gregory Damiani / [https://github.com/grggls](https://github.com/grggls)
+
+
 **License**: CC BY-NC-SA (Attribution-NonCommercial-ShareAlike)
 
 ---
@@ -33,9 +35,9 @@ Before we dive into exploration techniques, let's clarify some terminology that 
 
 **Import conventions**: When exploring, you'll often see different import styles:
 ```python
-import package_name                    # Import the whole package
-from package_name import ClassName     # Import specific items
-import package_name as pkg            # Import with alias
+import requests                        # Import the whole package
+from requests import Session           # Import specific items into the local namespace
+import requests as req                 # Import with alias
 ```
 
 Each style affects what's available in your namespace and how you access the library's functionality, which influences your exploration approach.
@@ -47,14 +49,23 @@ Each style affects what's available in your namespace and how you access the lib
 Start your exploration with these fundamental introspection techniques. These commands give you the essential structure of any Python object - whether it's a module, class, or function. Think of this as taking an X-ray of the library to see its skeleton.
 
 ```python
-import some_package
-type(some_package)     # Check if it's a module, class, etc.
-dir(some_package)      # List all attributes (functions, classes, constants)
-vars(some_package)     # Dictionary of module's namespace
+type(requests)     # Check if it's a module, class, etc.
+dir(requests)      # List all attributes (functions, classes, constants)
+vars(requests)     # Dictionary of module's namespace
 ```
-
 The `dir()` function is particularly valuable because it shows you everything available in the namespace, while `vars()` gives you the underlying dictionary representation. Use `type()` to understand what kind of object you're dealing with - this affects how you can interact with it.
 
+We imported both the whole package (`import requests`) as well as one module from it (`from requests import Session`). Therefore the last two statements here are functionally the same. 
+```python
+>>> type(requests)
+<class 'module'>
+>>> type(requests.Session)
+<class 'type'>
+>>> type(Session)
+<class 'type'>
+```
+
+This show how we can keep our python code clean while keeping our namespace tidy. If we only need one class or function, then the `from module_name import class_name` style of importing will also keep your binaries small. 
 ---
 
 ## 📚 Documentation & Help
@@ -62,16 +73,16 @@ The `dir()` function is particularly valuable because it shows you everything av
 Good documentation is your roadmap to understanding a library's intended usage patterns. Python's built-in help system, combined with IPython's enhanced introspection, can reveal not just what functions do, but how the library authors expect you to use them.
 
 ```python
-help(some_package)             # View top-level docstring
-help(some_package.SomeFunc)   # View docstring for function/class
+help(requests)             # View top-level docstring
+help(requests.get)         # View docstring for function/class
 
 # In IPython / Jupyter:
-some_package?                  # Show documentation
-some_package.SomeFunc??       # Show source code (if available)
+requests?                  # Show documentation
+requests.get??             # Show source code (if available)
 
 # Rich documentation exploration
 import webbrowser
-webbrowser.open(f"https://pypi.org/project/{some_package.__name__}/")
+webbrowser.open(f"https://pypi.org/project/{requests.__name__}/")
 ```
 
 The top-level module docstring often contains the library's philosophy and high-level usage patterns. Individual function and class docstrings reveal the expected interfaces and common gotchas. IPython's `??` operator is particularly powerful because it shows you the actual implementation, helping you understand performance characteristics and edge cases.
@@ -83,19 +94,101 @@ The top-level module docstring often contains the library's philosophy and high-
 Dunder (double underscore) attributes are Python's way of exposing metadata about objects. These attributes tell you about the object's identity, location, and interface contracts - essential information for understanding how to work with the library safely.
 
 ```python
-some_package.__doc__      # Docstring
-some_package.__file__     # Path to module file
-some_package.__name__     # Module name
-some_package.__version__  # Version (if available)
-some_package.__all__      # Public API (what gets imported with *)
+requests.__doc__      # Docstring
+requests.__file__     # Path to module file
+requests.__name__     # Module name
+requests.__version__  # Version (if available)
+```
+
+The `__all__` dunder lists all shared public strings of a module, function, library, etc. If you're writing your own module and sharing it, it's good practice to declare and export an `__all__` for your project. However, not all well-used community libraries do this unfortunately.
+
+```python
+os.__all__           # All exported strings of a function, module, etc.
+```
 
 # For classes - understand the interface contract
-SomeClass.__init__        # Constructor signature
-SomeClass.__dict__        # Instance attributes
-SomeClass.__slots__       # Restricted attributes (if using slots)
+requests.Response.__init__        # Constructor signature
+requests.Response.__dict__        # Instance attributes
 ```
 
 `__all__` is particularly important because it defines the public API - what the library authors consider safe and stable for external use. `__file__` helps you understand the library's structure and locate additional resources. For classes, `__slots__` tells you if the class uses memory optimization, which affects how you can dynamically add attributes.
+
+## `__slots__` are unique interface detail that some packages use to optimize memory usage
+
+`__slots__` is a special class attribute that tells Python to use a fixed-size array for storing instance attributes instead of a dynamic dictionary (`__dict__`). This optimization can significantly reduce memory usage and improve attribute access speed, especially for classes with many instances.
+
+### Why Libraries Use `__slots__`
+
+**Memory Optimization**: Classes with `__slots__` use 40-50% less memory per instance because they don't need to store a dictionary for each object.
+
+**Performance**: Attribute access is faster since Python can directly access the slot instead of doing a dictionary lookup.
+
+**Immutability**: Prevents adding new attributes after object creation, which can be useful for data classes and immutable objects.
+
+### How to Explore `__slots__`
+
+```python
+# Check if a class uses __slots__
+if hasattr(requests.Response, '__slots__'):
+    print(f"Response uses __slots__: {requests.Response.__slots__}")
+else:
+    print("Response uses __dict__ for attributes")
+
+# Compare memory usage (example with dataclasses)
+from dataclasses import dataclass
+
+@dataclass
+class RegularPoint:
+    x: int
+    y: int
+
+@dataclass(slots=True)
+class SlottedPoint:
+    x: int
+    y: int
+
+# RegularPoint.__slots__ -> AttributeError (uses __dict__)
+# SlottedPoint.__slots__ -> ('x', 'y')
+
+# Test attribute creation
+regular = RegularPoint(1, 2)
+regular.z = 3  # ✅ Works
+
+slotted = SlottedPoint(1, 2)
+# slotted.z = 3  # ❌ AttributeError: 'SlottedPoint' object has no attribute 'z'
+```
+
+### Common Libraries That Use `__slots__`
+
+**Standard Library Examples:**
+- `collections.namedtuple` - Uses empty `__slots__ = ()` to prevent new attributes
+- `dataclasses` with `slots=True` - Modern way to create memory-efficient data classes
+- `inspect.Signature` - Uses `__slots__ = ('_return_annotation', '_parameters')`
+
+**Third-Party Libraries:**
+- Many data science libraries (pandas, numpy) use `__slots__` for performance-critical classes
+- ORM libraries often use `__slots__` for model classes
+- Game engines and scientific computing libraries for memory efficiency
+
+### Trade-offs of `__slots__`
+
+**Advantages:**
+- Reduced memory usage
+- Faster attribute access
+- Prevents accidental attribute creation
+
+**Disadvantages:**
+- Can't add new attributes dynamically
+- More complex inheritance (can't easily mix with classes that don't use `__slots__`)
+- No `__dict__` attribute (unless explicitly included in `__slots__`)
+
+### When to Look for `__slots__`
+
+Check for `__slots__` when:
+- Working with data classes or immutable objects
+- Performance is critical (many instances)
+- You need to understand memory usage patterns
+- Exploring libraries that handle large datasets
 
 ---
 
@@ -105,9 +198,13 @@ Understanding a package's metadata helps you assess its maturity, compatibility,
 
 ```bash
 # Shell commands
-pip show some_package              # Basic package info
-pip show --verbose some_package    # Detailed info including dependencies
+$ pip show requests              # Basic package info
+$ pip show --verbose requests    # Detailed info including dependencies
 ```
+
+Python's package metadata system provides programmatic access to the same information you get from `pip show`, but with much more detail and flexibility. The `pkg_resources` and `importlib.metadata` modules let you inspect package versions, dependencies, entry points, and other metadata that can reveal a library's architecture and integration points.
+
+This metadata exploration is particularly valuable for understanding dependency chains, identifying potential version conflicts, and discovering hidden functionality like command-line tools or plugin systems that might not be obvious from the main API.
 
 ```python
 # Python introspection
@@ -115,19 +212,19 @@ import pkg_resources
 import importlib.metadata
 
 # Version info
-dist = pkg_resources.get_distribution("some_package")
+dist = pkg_resources.get_distribution("requests")
 print(f"Version: {dist.version}")
 print(f"Location: {dist.location}")
 
 # Dependencies
 try:
-    metadata = importlib.metadata.metadata("some_package")
+    metadata = importlib.metadata.metadata("requests")
     print("Dependencies:", metadata.get_all("Requires-Dist"))
 except importlib.metadata.PackageNotFoundError:
     print("Package metadata not found")
 
 # Find all entry points (CLI commands, plugins, etc.)
-entry_points = pkg_resources.get_entry_map("some_package")
+entry_points = pkg_resources.get_entry_map("requests")
 print("Entry points:", entry_points)
 ```
 
@@ -143,9 +240,26 @@ Complex data structures and nested objects can be overwhelming when printed with
 from pprint import pprint
 import json
 
+# Create some example data to pretty-print
+data = {
+    'requests': {
+        'classes': ['Session', 'Response', 'Request'],
+        'functions': ['get', 'post', 'put', 'delete'],
+        'config': {
+            'timeout': 30,
+            'verify': True,
+            'allow_redirects': True
+        }
+    }
+}
+
 # Pretty print complex structures
 pprint(data, width=80, depth=3)
+```
 
+The `json.dumps()` function converts Python objects to a JSON string representation, making complex data structures readable and portable. The `indent=2` parameter creates nicely formatted, human-readable output, while `default=str` handles non-serializable objects by converting them to strings. The `print_module_tree()` function creates a hierarchical tree view of a module's structure, showing classes, functions, and their methods in an organized format. This visualization helps you quickly understand the library's architecture, identify the main components, and spot patterns in naming conventions that reveal the library's design principles.
+
+```python
 # JSON formatting for serializable data
 print(json.dumps(data, indent=2, default=str))
 
@@ -156,7 +270,7 @@ def print_module_tree(module, max_depth=2, current_depth=0):
         return
     
     indent = "  " * current_depth
-    for name, obj in inspect.getmembers(module):
+    for name, obj in inspect.getmembers(requests):
         if not name.startswith('_'):
             obj_type = type(obj).__name__
             print(f"{indent}├── {name} ({obj_type})")
@@ -166,7 +280,7 @@ def print_module_tree(module, max_depth=2, current_depth=0):
                     if not method_name.startswith('_'):
                         print(f"{indent}│   ├── {method_name}()")
 
-# print_module_tree(some_package)
+print_module_tree(requests)
 ```
 
 The tree visualization is particularly valuable for understanding hierarchical relationships and spotting naming patterns that reveal the library's organizational principles.
@@ -181,23 +295,163 @@ The `inspect` module is your Swiss Army knife for understanding Python objects a
 import inspect
 
 # Get all members with their types
-inspect.getmembers(some_package)          # List all members
-inspect.getsource(some_package.func)      # Get source code
-inspect.signature(some_package.func)      # Show function signature
+inspect.getmembers(requests)          # List all members
+inspect.getsource(requests.get)       # Get source code
+inspect.signature(requests.get)       # Show function signature
 
-# Type checking for defensive programming
+# Type checking for defensive programming. Like most/all *.isXYZ functions, these return a boolean
 inspect.isfunction(obj)                   # Check if object is a function
 inspect.isclass(obj)                      # Check if object is a class
 inspect.ismodule(obj)                     # Check if object is a module
 inspect.ismethod(obj)                     # Check if object is a method
 
 # Parameter introspection for safe calling
-sig = inspect.signature(some_function)
+sig = inspect.signature(requests.get)
 for param_name, param in sig.parameters.items():
     print(f"{param_name}: {param.annotation}, default={param.default}")
 ```
 
 Function signatures are particularly valuable because they show you not just what parameters are required, but also type hints and default values. This information is essential for writing defensive code that handles edge cases gracefully.
+
+### Adding Deep Inspection To Your Own Code
+
+To make your own functions work with `inspect.signature()` and other introspection tools, you need to understand how Python's signature system works. Here are the key approaches:
+
+#### 1. Automatic Signature Detection (Most Common)
+
+Python automatically detects signatures for most functions with type hints:
+
+```python
+import inspect
+
+def my_library_function(name: str, age: int = 25, city: str = "NYC") -> str:
+    """A function with type hints and defaults"""
+    return f"{name} is {age} from {city}"
+
+# inspect.signature() works automatically
+sig = inspect.signature(my_library_function)
+print(sig)  # (name: str, age: int = 25, city: str = "NYC") -> str
+
+# Get parameter details
+for param_name, param in sig.parameters.items():
+    print(f"{param_name}: {param.annotation}, default={param.default}")
+```
+
+#### 2. Using `__annotations__` for Type Hints
+
+```python
+def my_dynamic_function(x, y, z):
+    """Function without type hints in signature"""
+    pass
+
+# Add type hints after definition
+my_dynamic_function.__annotations__ = {
+    'x': int,
+    'y': str, 
+    'z': list,
+    'return': bool
+}
+
+# Now inspect.signature() will show the types
+sig = inspect.signature(my_dynamic_function)
+print(sig)  # (x: int, y: str, z: list) -> bool
+```
+
+#### 3. Using `functools.wraps` for Decorators
+
+```python
+import functools
+import inspect
+
+def my_decorator(func):
+    @functools.wraps(func)  # This preserves the original signature
+    def wrapper(*args, **kwargs):
+        print(f"Calling {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@my_decorator
+def decorated_function(name: str, count: int = 1) -> str:
+    return name * count
+
+# inspect.signature() works correctly
+sig = inspect.signature(decorated_function)
+print(sig)  # (name: str, count: int = 1) -> str
+```
+
+#### 4. Custom Signature with `inspect.Signature`
+
+For advanced cases, you can create custom signatures:
+
+```python
+import inspect
+from inspect import Parameter
+
+def my_dynamic_function(*args, **kwargs):
+    """Function with dynamic behavior"""
+    pass
+
+# Create a custom signature
+params = [
+    Parameter('name', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
+    Parameter('age', Parameter.POSITIONAL_OR_KEYWORD, default=25, annotation=int),
+    Parameter('city', Parameter.KEYWORD_ONLY, default="NYC", annotation=str)
+]
+
+# Attach the signature
+my_dynamic_function.__signature__ = inspect.Signature(
+    parameters=params,
+    return_annotation=str
+)
+
+# Now inspect.signature() works
+sig = inspect.signature(my_dynamic_function)
+print(sig)  # (name: str, age: int = 25, *, city: str = 'NYC') -> str
+```
+
+#### 5. Best Practices for Library Functions
+
+```python
+import inspect
+from typing import Optional, List, Dict, Any
+
+def my_library_api(
+    endpoint: str,
+    data: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, str]] = None,
+    timeout: float = 30.0
+) -> Dict[str, Any]:
+    """
+    A well-documented library function that works great with inspect.signature()
+    
+    Args:
+        endpoint: The API endpoint to call
+        data: Optional data to send
+        headers: Optional headers to include
+        timeout: Request timeout in seconds
+    
+    Returns:
+        Response data as dictionary
+    """
+    # Implementation here
+    pass
+
+# This automatically works with inspect.signature()
+sig = inspect.signature(my_library_api)
+print(sig)
+# (endpoint: str, data: Optional[Dict[str, Any]] = None, 
+#  headers: Optional[Dict[str, str]] = None, timeout: float = 30.0) -> Dict[str, Any]
+```
+
+#### Key Points for Your Own Code:
+
+1. **Type hints are automatically detected** by `inspect.signature()`
+2. **Default values are preserved** in the signature
+3. **Return type annotations** are included
+4. **`functools.wraps`** preserves signatures in decorators
+5. **Custom signatures** can be created for special cases
+
+The most common and recommended approach is to use **type hints** in your function definitions - Python will automatically make them work with `inspect.signature()` and other introspection tools.
 
 ---
 
@@ -209,9 +463,9 @@ Domain-driven design principles apply to library exploration: you want to identi
 
 ```python
 # Find the core abstractions and entities
-classes = [name for name, obj in inspect.getmembers(some_package, inspect.isclass)]
-functions = [name for name, obj in inspect.getmembers(some_package, inspect.isfunction)]
-constants = [name for name in dir(some_package) if name.isupper()]
+classes = [name for name, obj in inspect.getmembers(requests, inspect.isclass)]
+functions = [name for name, obj in inspect.getmembers(requests, inspect.isfunction)]
+constants = [name for name in dir(requests) if name.isupper()]
 
 print("Core Classes (Domain Entities):", classes)
 print("Operations (Domain Services):", functions) 
@@ -219,7 +473,7 @@ print("Configuration/Constants:", constants)
 
 # Explore class hierarchies to understand domain relationships
 for cls_name in classes:
-    cls = getattr(some_package, cls_name)
+    cls = getattr(requests, cls_name)
     print(f"{cls_name}: {cls.__mro__}")  # Method Resolution Order shows inheritance
 ```
 
@@ -248,7 +502,7 @@ Defensive programming starts with understanding what can go wrong. By discoverin
 
 ```python
 # Discover what exceptions a library defines
-exceptions = [name for name, obj in inspect.getmembers(some_package, 
+exceptions = [name for name, obj in inspect.getmembers(requests, 
              lambda x: inspect.isclass(x) and issubclass(x, Exception))]
 print("Custom Exceptions:", exceptions)
 
@@ -271,7 +525,7 @@ def safe_explore_function(func, test_args=None):
         print(f"❌ {func.__name__}: {type(e).__name__}: {e}")
 
 # Example usage
-safe_explore_function(some_package.some_function)
+safe_explore_function(requests.get, ("https://httpbin.org/get",))
 ```
 
 Custom exceptions tell you what the library considers to be error conditions and how it expects you to handle them. The safe exploration function helps you test library functions without crashing your exploration session.
@@ -310,7 +564,7 @@ def find_usage_examples(module):
                 for example in examples:
                     print(example)
 
-find_usage_examples(some_package)
+find_usage_examples(requests)
 
 # Discover common patterns by analyzing method names
 def analyze_api_patterns(module):
@@ -330,7 +584,7 @@ def analyze_api_patterns(module):
     print("CRUD Operations:", crud_ops)
     print("Async Methods:", async_methods)
 
-analyze_api_patterns(some_package)
+analyze_api_patterns(requests)
 ```
 
 CRUD pattern analysis helps you understand how the library handles data operations, while async pattern discovery reveals whether the library supports concurrent operations and how to use them properly.
@@ -371,7 +625,7 @@ def object_size_analysis(obj):
         print(f"Attributes: {len(obj.__dict__)}")
 
 # Example usage
-# profile_function(some_package.some_method, test_arg)
+# profile_function(requests.get, "https://httpbin.org/get")
 ```
 
 Memory profiling is particularly important for libraries that create large objects or process significant amounts of data. Object size analysis helps you understand the memory overhead of different approaches.
@@ -422,9 +676,10 @@ def explore_package(package_name):
     print(f"  - explore main classes: {classes[:3]}")
     print(f"  - try key functions: {functions[:3]}")
 
-# Usage
-# explore_package('mcp')
-# explore_package('google.cloud.storage')
+# Usage examples
+# explore_package('requests')
+# explore_package('json')
+# explore_package('webbrowser')
 ```
 
 This workflow template provides a consistent starting point for any library exploration. It builds understanding progressively and gives you concrete next steps for deeper investigation.
@@ -449,15 +704,18 @@ sandbox = types.ModuleType('sandbox')
 
 # Test configurations safely
 test_configs = [
-    {'param1': 'value1'},
-    {'param1': 'value2', 'param2': 42},
+    {'timeout': 5},
+    {'timeout': 10, 'verify': False},
     {}  # Empty config
 ]
 
 for config in test_configs:
     try:
-        result = some_package.SomeClass(**config)
-        print(f"✅ Config {config} -> {type(result)}")
+        session = requests.Session()
+        # Test session configuration
+        for key, value in config.items():
+            setattr(session, key, value)
+        print(f"✅ Config {config} -> Session configured")
     except Exception as e:
         print(f"❌ Config {config} -> {type(e).__name__}: {e}")
 ```
