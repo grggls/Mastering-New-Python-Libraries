@@ -82,3 +82,12 @@ cython_debug/
 # Auto-generated build artifacts
 Mastering-New-Python-Libraries.ipynb
 Mastering-New-Python-Libraries.pdf
+
+# Test-generated notebooks (but keep test markdown files)
+test_*.ipynb
+
+# Exceptions - keep these test files in git
+!test_problematic.md
+!test_severe_issue.md
+!test_edge_cases.md
+!test_conversion.py

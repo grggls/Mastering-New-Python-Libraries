@@ -1,0 +1,117 @@
+name: Test Code Quality
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-code:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install jupyter ipython
+        
+    - name: Run code validation tests
+      run: |
+        python test_code_blocks.py
+        
+    - name: Generate test notebook
+      run: |
+        python convert_to_notebook.py README.md -o test-notebook.ipynb
+        
+    - name: Test notebook execution (dry run)
+      run: |
+        python -c "
+        import nbformat
+        from nbconvert.preprocessors import ExecutePreprocessor
+        
+        # Load the notebook
+        with open('test-notebook.ipynb', 'r') as f:
+            nb = nbformat.read(f, as_version=4)
+        
+        # Create executor
+        ep = ExecutePreprocessor(timeout=60, kernel_name='python3')
+        
+        # Execute cells (dry run - don't actually run, just validate)
+        print('Validating notebook structure...')
+        for i, cell in enumerate(nb.cells):
+            if cell.cell_type == 'code':
+                source = ''.join(cell.source)
+                if source.strip() and not source.startswith('%%bash'):
+                    print(f'Cell {i+1}: Validating Python syntax...')
+                    try:
+                        compile(source, '<cell>', 'exec')
+                        print(f'  ✅ Cell {i+1}: Valid syntax')
+                    except SyntaxError as e:
+                        print(f'  ❌ Cell {i+1}: Syntax error - {e}')
+                        exit(1)
+        
+        print('✅ All cells validated successfully!')
+        "
+        
+    - name: Execute notebook
+      run: |
+        pip install nbconvert
+        jupyter nbconvert --to notebook --execute --inplace test-notebook.ipynb
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          test-notebook.ipynb
+          *.log
+        retention-days: 7
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let message = '## 🧪 Code Quality Test Results\n\n';
+          
+          // Check if test notebook was generated
+          if (fs.existsSync('test-notebook.ipynb')) {
+            const notebook = JSON.parse(fs.readFileSync('test-notebook.ipynb', 'utf8'));
+            const cellCount = notebook.cells.length;
+            const codeCells = notebook.cells.filter(cell => cell.cell_type === 'code').length;
+            const markdownCells = notebook.cells.filter(cell => cell.cell_type === 'markdown').length;
+            
+            message += `✅ **Notebook Generation**: Success\n`;
+            message += `📊 **Statistics**:\n`;
+            message += `- Total cells: ${cellCount}\n`;
+            message += `- Code cells: ${codeCells}\n`;
+            message += `- Markdown cells: ${markdownCells}\n\n`;
+          } else {
+            message += `❌ **Notebook Generation**: Failed\n\n`;
+          }
+          
+          message += `📥 **Artifacts**: Test results are available in the Actions tab.\n\n`;
+          message += `🔍 **What was tested**:\n`;
+          message += `- Python syntax validation in README code blocks\n`;
+          message += `- Conversion script functionality\n`;
+          message += `- Generated notebook structure\n`;
+          message += `- Basic functional tests\n`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          }); 

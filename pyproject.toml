@@ -9,4 +9,17 @@ dependencies = [
     "google-adk>=0.0.1",
     "numpy>=2.3.0",
     "ipykernel>=6.29.5",
+    "nbformat>=5.10.4",
+    "nbconvert>=7.16.6",
 ]
+
+[project.optional-dependencies]
+test = [
+    "nbformat>=5.0.0",
+    "nbconvert>=7.0.0",
+    "jupyter>=1.0.0",
+    "ipython>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

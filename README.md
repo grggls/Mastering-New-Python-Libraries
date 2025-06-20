@@ -49,24 +49,34 @@ Each style affects what's available in your namespace and how you access the lib
 Start your exploration with these fundamental introspection techniques. These commands give you the essential structure of any Python object - whether it's a module, class, or function. Think of this as taking an X-ray of the library to see its skeleton.
 
 ```python
-type(requests)     # Check if it's a module, class, etc.
-dir(requests)      # List all attributes (functions, classes, constants)
-vars(requests)     # Dictionary of module's namespace
-```
-The `dir()` function is particularly valuable because it shows you everything available in the namespace, while `vars()` gives you the underlying dictionary representation. Use `type()` to understand what kind of object you're dealing with - this affects how you can interact with it.
+import requests
+from requests import Session
 
-We imported both the whole package (`import requests`) as well as one module from it (`from requests import Session`). Therefore the last two statements here are functionally the same. 
-```python
->>> type(requests)
-<class 'module'>
->>> type(requests.Session)
-<class 'type'>
->>> type(Session)
-<class 'type'>
+# Check what type of object you're working with
+type(requests)     # <class 'module'>
+type(Session)      # <class 'type'>
+
+# List all available attributes
+dir(requests)      # ['ConnectTimeout', 'HTTPError', 'Session', 'get', 'post', ...]
+
+# Get the namespace as a dictionary (more detailed than dir)
+vars(requests)     # {'__name__': 'requests', '__doc__': '...', 'get': <function>, ...}
 ```
 
-This show how we can keep our python code clean while keeping our namespace tidy. If we only need one class or function, then the `from module_name import class_name` style of importing will also keep your binaries small. 
----
+### In IPython / Jupyter:
+```ipython
+# Enhanced introspection with ? and ??
+requests?          # Show documentation and basic info
+requests.get??     # Show source code (if available)
+```
+
+### Key insights from these commands:
+
+`type()` tells you what kind of object you're dealing with, which affects how you can interact with it
+`dir()` shows you everything available in the namespace - your roadmap to what's possible
+`vars(`)` gives you the underlying dictionary representation with more detail than `dir()`
+IPython's `?` gives you rich documentation, while `??` shows actual source code
+Notice how `requests.Session` and `Session` refer to the same class after our imports
 
 ## 📚 Documentation & Help
 
@@ -75,10 +85,6 @@ Good documentation is your roadmap to understanding a library's intended usage p
 ```python
 help(requests)             # View top-level docstring
 help(requests.get)         # View docstring for function/class
-
-# In IPython / Jupyter:
-requests?                  # Show documentation
-requests.get??             # Show source code (if available)
 
 # Rich documentation exploration
 import webbrowser
@@ -106,6 +112,7 @@ The `__all__` dunder lists all shared public strings of a module, function, libr
 os.__all__           # All exported strings of a function, module, etc.
 ```
 
+```python
 # For classes - understand the interface contract
 requests.Response.__init__        # Constructor signature
 requests.Response.__dict__        # Instance attributes
@@ -550,44 +557,65 @@ print("Error handling utilities:", error_handlers)
 Libraries often follow common patterns that aren't immediately obvious from their API documentation. By analyzing naming conventions, method patterns, and docstring examples, you can discover the idiomatic ways to use the library.
 
 ```python
+# syntax test: force reparse
 # Find example usage in docstrings
 import re
+import inspect
 
 def find_usage_examples(module):
     """Extract code examples from docstrings"""
     for name, obj in inspect.getmembers(module):
         if hasattr(obj, '__doc__') and obj.__doc__:
             # Look for >>> patterns (doctest style)
-            examples = re.findall(r'>>> .*(?:\n.*)*?', obj.__doc__)
+            examples = re.findall(r'>>> .*', obj.__doc__)
             if examples:
                 print(f"\n{name} examples:")
                 for example in examples:
                     print(example)
+    pass
 
 find_usage_examples(requests)
-
-# Discover common patterns by analyzing method names
-def analyze_api_patterns(module):
-    """Identify common API patterns"""
-    methods = [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
-    
-    # CRUD operations
-    crud_ops = {'create': [], 'read': [], 'update': [], 'delete': []}
-    for method in methods:
-        for op in crud_ops:
-            if op in method.lower():
-                crud_ops[op].append(method)
-    
-    # Async patterns
-    async_methods = [m for m in methods if m.startswith('a') or 'async' in m]
-    
-    print("CRUD Operations:", crud_ops)
-    print("Async Methods:", async_methods)
-
-analyze_api_patterns(requests)
 ```
 
-CRUD pattern analysis helps you understand how the library handles data operations, while async pattern discovery reveals whether the library supports concurrent operations and how to use them properly.
+```python
+# syntax test: force reparse
+# Complete exploration template
+import inspect
+import importlib
+
+def explore_package(package_name):
+    """Complete package exploration workflow"""
+
+    # Import the package
+    module = importlib.import_module(package_name)
+
+    print(f"🔍 Exploring {package_name}")
+    print("=" * 50)
+
+    # Basic info
+    print(f"📦 Package: {module.__name__}")
+    print(f"📄 File: {module.__file__}")
+    print(f"📝 Doc: {module.__doc__[:100] if module.__doc__ else 'No docstring'}...")
+
+    # All exports
+    if hasattr(module, '__all__'):
+        print(f"📋 Exports: {module.__all__}")
+
+    # Key classes and functions
+    classes = [name for name, obj in inspect.getmembers(module, inspect.isclass)]
+    functions = [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
+
+    print(f"🏗️ Classes: {classes[:10]}{'...' if len(classes) > 10 else ''}")
+    print(f"⚙️ Functions: {functions[:10]}{'...' if len(functions) > 10 else ''}")
+
+    return module
+    pass
+
+# Usage examples
+# explore_package('requests')
+# explore_package('json')
+# explore_package('webbrowser')
+```
 
 ---
 
@@ -637,44 +665,38 @@ Memory profiling is particularly important for libraries that create large objec
 Having a systematic workflow for exploration ensures you don't miss important aspects of a library and helps you build understanding progressively from high-level concepts to specific implementation details.
 
 ```python
+# syntax test: force reparse
 # Complete exploration template
+import inspect
+import importlib
+
 def explore_package(package_name):
     """Complete package exploration workflow"""
+
+    # Import the package
+    module = importlib.import_module(package_name)
+
     print(f"🔍 Exploring {package_name}")
     print("=" * 50)
-    
-    # 1. Import and basic info
-    try:
-        package = __import__(package_name)
-        print(f"✅ Successfully imported {package_name}")
-        print(f"📁 Location: {package.__file__}")
-        print(f"📋 Type: {type(package)}")
-    except ImportError as e:
-        print(f"❌ Import failed: {e}")
-        return
-    
-    # 2. High-level structure
-    public_api = [name for name in dir(package) if not name.startswith('_')]
-    print(f"\n🏗️ Public API ({len(public_api)} items):")
-    print(", ".join(public_api[:10]), "..." if len(public_api) > 10 else "")
-    
-    # 3. Domain model discovery
-    classes = [name for name, obj in inspect.getmembers(package, inspect.isclass)]
-    functions = [name for name, obj in inspect.getmembers(package, inspect.isfunction)]
-    
-    print(f"\n🎯 Domain Model:")
-    print(f"  Classes: {len(classes)} - {', '.join(classes[:5])}")
-    print(f"  Functions: {len(functions)} - {', '.join(functions[:5])}")
-    
-    # 4. Quick help
-    if hasattr(package, '__doc__') and package.__doc__:
-        print(f"\n📚 Description:")
-        print(package.__doc__[:200] + "..." if len(package.__doc__) > 200 else package.__doc__)
-    
-    print(f"\n💡 Next steps:")
-    print(f"  - help({package_name}) for detailed docs")
-    print(f"  - explore main classes: {classes[:3]}")
-    print(f"  - try key functions: {functions[:3]}")
+
+    # Basic info
+    print(f"📦 Package: {module.__name__}")
+    print(f"📄 File: {module.__file__}")
+    print(f"📝 Doc: {module.__doc__[:100] if module.__doc__ else 'No docstring'}...")
+
+    # All exports
+    if hasattr(module, '__all__'):
+        print(f"📋 Exports: {module.__all__}")
+
+    # Key classes and functions
+    classes = [name for name, obj in inspect.getmembers(module, inspect.isclass)]
+    functions = [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
+
+    print(f"🏗️ Classes: {classes[:10]}{'...' if len(classes) > 10 else ''}")
+    print(f"⚙️ Functions: {functions[:10]}{'...' if len(functions) > 10 else ''}")
+
+    return module
+    pass
 
 # Usage examples
 # explore_package('requests')
@@ -807,7 +829,7 @@ jupyter notebook Mastering-New-Python-Libraries.ipynb
 
 #### Notebook Structure
 
-```python
+```text
 # Setup cell (auto-generated)
 import sys
 import os
@@ -925,7 +947,7 @@ Access via `Cmd+Shift+P` → "Tasks: Run Task"
 
 #### Customizing the Conversion
 
-```python
+```bash
 # Modify convert_to_notebook.py for custom behavior
 python3 convert_to_notebook.py README.md \
   --output custom-notebook.ipynb \
@@ -981,3 +1003,6 @@ The automation works seamlessly with:
 - **Local Development**: Pre-commit hooks for immediate feedback
 
 This automation system ensures that your documentation stays current, interactive, and accessible in multiple formats while maintaining the quality and consistency of your learning materials.
+
+def minimal():
+    pass
