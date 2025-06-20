@@ -78,3 +78,7 @@ cython_debug/
 
 # OS files
 .DS_Store
+
+# Auto-generated build artifacts
+Mastering-New-Python-Libraries.ipynb
+Mastering-New-Python-Libraries.pdf

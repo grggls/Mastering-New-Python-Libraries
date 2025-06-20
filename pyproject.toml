@@ -9,4 +9,5 @@ dependencies = [
     "google-adk>=0.0.1",
     "numpy>=2.3.0",
     "ipykernel>=6.29.5",
+    "ipython_magic_bash>=0.1.0",
 ]

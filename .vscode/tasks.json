@@ -1,0 +1,81 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Notebook",
+            "type": "shell",
+            "command": "python3",
+            "args": ["convert_to_notebook.py", "README.md", "-o", "Mastering-New-Python-Libraries.ipynb"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build PDF",
+            "type": "shell",
+            "command": "pandoc",
+            "args": [
+                "README.md",
+                "--pdf-engine=xelatex",
+                "--variable=geometry:margin=1in",
+                "--variable=fontsize:11pt",
+                "--variable=mainfont:DejaVu Sans",
+                "--variable=monofont:DejaVu Sans Mono",
+                "--variable=colorlinks:true",
+                "--variable=linkcolor:blue",
+                "--variable=urlcolor:blue",
+                "--variable=toccolor:gray",
+                "--toc",
+                "--number-sections",
+                "--output=Mastering-New-Python-Libraries.pdf"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build All",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Build Notebook", "Build PDF"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "Open Notebook",
+            "type": "shell",
+            "command": "jupyter",
+            "args": ["notebook", "Mastering-New-Python-Libraries.ipynb"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+} 
