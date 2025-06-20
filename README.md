@@ -936,13 +936,12 @@ python3 convert_to_notebook.py README.md \
 #### Dependencies
 
 The conversion requires:
-- `ipython_magic_bash` for shell command execution
-- `jupyter` for notebook viewing
+- `jupyter` and `ipython` for notebook viewing and shell command execution
 - `pandoc` for PDF generation
 
 Install with:
 ```bash
-rye sync  # Installs all dependencies including ipython_magic_bash
+rye sync  # Installs all dependencies
 ```
 
 #### Environment Setup

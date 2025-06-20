@@ -127,7 +127,7 @@ def add_setup_cell(notebook: Dict[str, Any]) -> Dict[str, Any]:
             'from pathlib import Path\n',
             '\n',
             '# Enable shell magic for terminal commands\n',
-            '%load_ext ipython_magic_bash\n',
+            '# Note: %%bash magic is built into IPython/Jupyter\n',
             '\n',
             '# Set up display options\n',
             'from IPython.display import display, HTML\n',
