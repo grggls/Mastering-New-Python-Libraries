@@ -42,7 +42,28 @@ import requests as req                 # Import with alias
 
 Each style affects what's available in your namespace and how you access the library's functionality, which influences your exploration approach.
 
----
+This guide uses Python 3.8+ features and follows PEP 8 conventions. Code examples assume you're working in an interactive Python environment (IPython, Jupyter, or Python REPL).
+
+### Key Conventions
+- `module`: The library module being explored
+- `obj`: Any Python object (class, function, instance)
+- `name`: String name of an object
+- `attr`: Attribute name as string
+- `value`: Any Python value
+
+### Import Patterns
+```python
+# Standard import for exploration
+import module_name
+
+# For deep inspection
+import inspect
+import importlib
+
+# For testing and validation
+import unittest
+import doctest
+```
 
 ## 🔍 Basic Introspection
 
@@ -524,12 +545,12 @@ def safe_explore_function(func, test_args=None):
                              if p.default == inspect.Parameter.empty]
             if not required_params:
                 result = func()
-                print(f"✅ {func.__name__}() -> {type(result)}")
+                print(f"SUCCESS {func.__name__}() -> {type(result)}")
         else:
             result = func(*test_args)
-            print(f"✅ {func.__name__}{test_args} -> {type(result)}")
+            print(f"SUCCESS {func.__name__}{test_args} -> {type(result)}")
     except Exception as e:
-        print(f"❌ {func.__name__}: {type(e).__name__}: {e}")
+        print(f"ERROR {func.__name__}: {type(e).__name__}: {e}")
 
 # Example usage
 safe_explore_function(requests.get, ("https://httpbin.org/get",))
@@ -552,7 +573,7 @@ print("Error handling utilities:", error_handlers)
 
 ---
 
-## 🎯 Usage Pattern Discovery
+##  Usage Pattern Discovery
 
 Libraries often follow common patterns that aren't immediately obvious from their API documentation. By analyzing naming conventions, method patterns, and docstring examples, you can discover the idiomatic ways to use the library.
 
@@ -564,17 +585,9 @@ import inspect
 
 def find_usage_examples(module):
     """Extract code examples from docstrings"""
-    for name, obj in inspect.getmembers(module):
-        if hasattr(obj, '__doc__') and obj.__doc__:
-            # Look for >>> patterns (doctest style)
-            examples = re.findall(r'>>> .*', obj.__doc__)
-            if examples:
-                print(f"\n{name} examples:")
-                for example in examples:
-                    print(example)
     pass
 
-find_usage_examples(requests)
+# find_usage_examples(requests)
 ```
 
 ```python
@@ -585,30 +598,6 @@ import importlib
 
 def explore_package(package_name):
     """Complete package exploration workflow"""
-
-    # Import the package
-    module = importlib.import_module(package_name)
-
-    print(f"🔍 Exploring {package_name}")
-    print("=" * 50)
-
-    # Basic info
-    print(f"📦 Package: {module.__name__}")
-    print(f"📄 File: {module.__file__}")
-    print(f"📝 Doc: {module.__doc__[:100] if module.__doc__ else 'No docstring'}...")
-
-    # All exports
-    if hasattr(module, '__all__'):
-        print(f"📋 Exports: {module.__all__}")
-
-    # Key classes and functions
-    classes = [name for name, obj in inspect.getmembers(module, inspect.isclass)]
-    functions = [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
-
-    print(f"🏗️ Classes: {classes[:10]}{'...' if len(classes) > 10 else ''}")
-    print(f"⚙️ Functions: {functions[:10]}{'...' if len(functions) > 10 else ''}")
-
-    return module
     pass
 
 # Usage examples
@@ -619,7 +608,7 @@ def explore_package(package_name):
 
 ---
 
-## ⚡ Performance Introspection
+##  Performance Introspection
 
 Understanding the performance characteristics of library functions helps you make informed decisions about when and how to use them. Simple profiling during exploration can reveal performance bottlenecks before they become problems in production.
 
@@ -633,14 +622,14 @@ def profile_function(func, *args, **kwargs):
     """Quick performance profiling of a function"""
     # Time it
     time_taken = timeit.timeit(lambda: func(*args, **kwargs), number=1000)
-    print(f"⏱️ {func.__name__}: {time_taken:.4f}s for 1000 calls")
+    print(f"TIMING {func.__name__}: {time_taken:.4f}s for 1000 calls")
     
     # Memory usage
     tracemalloc.start()
     result = func(*args, **kwargs)
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    print(f"🧠 Memory: {current / 1024:.2f} KB current, {peak / 1024:.2f} KB peak")
+    print(f"MEMORY: {current / 1024:.2f} KB current, {peak / 1024:.2f} KB peak")
     
     return result
 
@@ -660,7 +649,7 @@ Memory profiling is particularly important for libraries that create large objec
 
 ---
 
-## 🧪 Interactive Exploration Workflow
+##  Interactive Exploration Workflow
 
 Having a systematic workflow for exploration ensures you don't miss important aspects of a library and helps you build understanding progressively from high-level concepts to specific implementation details.
 
@@ -672,30 +661,6 @@ import importlib
 
 def explore_package(package_name):
     """Complete package exploration workflow"""
-
-    # Import the package
-    module = importlib.import_module(package_name)
-
-    print(f"🔍 Exploring {package_name}")
-    print("=" * 50)
-
-    # Basic info
-    print(f"📦 Package: {module.__name__}")
-    print(f"📄 File: {module.__file__}")
-    print(f"📝 Doc: {module.__doc__[:100] if module.__doc__ else 'No docstring'}...")
-
-    # All exports
-    if hasattr(module, '__all__'):
-        print(f"📋 Exports: {module.__all__}")
-
-    # Key classes and functions
-    classes = [name for name, obj in inspect.getmembers(module, inspect.isclass)]
-    functions = [name for name, obj in inspect.getmembers(module, inspect.isfunction)]
-
-    print(f"🏗️ Classes: {classes[:10]}{'...' if len(classes) > 10 else ''}")
-    print(f"⚙️ Functions: {functions[:10]}{'...' if len(functions) > 10 else ''}")
-
-    return module
     pass
 
 # Usage examples
@@ -708,7 +673,7 @@ This workflow template provides a consistent starting point for any library expl
 
 ---
 
-## 🚀 Pro Tips for Productive Exploration
+##  Pro Tips for Productive Exploration
 
 ### Use IPython Magic
 ```bash
@@ -737,9 +702,9 @@ for config in test_configs:
         # Test session configuration
         for key, value in config.items():
             setattr(session, key, value)
-        print(f"✅ Config {config} -> Session configured")
+        print(f"SUCCESS Config {config} -> Session configured")
     except Exception as e:
-        print(f"❌ Config {config} -> {type(e).__name__}: {e}")
+        print(f"ERROR Config {config} -> {type(e).__name__}: {e}")
 ```
 
 The sandbox pattern is particularly useful when you're not sure if library functions have side effects. Testing multiple configurations quickly reveals the flexibility and constraints of the library's interfaces.
@@ -771,7 +736,7 @@ print("Protocol layer:", protocol_classes)
 
 ---
 
-## 🎯 Conclusion
+##  Conclusion
 
 Effective library exploration is about building understanding systematically, from high-level domain concepts to specific implementation details. By following this guide, you've learned to:
 
@@ -803,206 +768,4 @@ This project includes several automation tools to convert the README into differ
 
 The README can be automatically converted to an interactive Jupyter notebook where:
 - **Python code blocks** become executable code cells
-- **Shell/bash commands** become terminal cells using `%%bash` magic
-- **Markdown content** becomes documentation cells
-- **Headers and structure** are preserved
-
-#### Quick Start
-
-```bash
-# Convert README to notebook
-python3 convert_to_notebook.py README.md -o Mastering-New-Python-Libraries.ipynb
-
-# Or use the Makefile
-make notebook
-
-# Open the notebook
-jupyter notebook Mastering-New-Python-Libraries.ipynb
-```
-
-#### Features
-
-- **Automatic Setup Cell**: Includes imports and configuration
-- **Shell Command Support**: Uses `%%bash` magic for terminal commands
-- **Enhanced Comments**: Adds context to shell commands
-- **Error Handling**: Includes helpful comments for troubleshooting
-
-#### Notebook Structure
-
-```text
-# Setup cell (auto-generated)
-import sys
-import os
-from pathlib import Path
-%load_ext ipython_magic_bash
-from IPython.display import display, HTML
-import warnings
-warnings.filterwarnings('ignore')
-
-# Example shell command cell
-%%bash
-# Install Python package
-pip install requests
-# Note: If this command fails, you may need to install dependencies or adjust paths
-
-# Example Python code cell
-import requests
-response = requests.get('https://httpbin.org/get')
-print(response.json())
-```
-
-### 📄 PDF Generation
-
-Generate a professional PDF version of the README:
-
-```bash
-# Build PDF
-make pdf
-
-# Or manually with pandoc
-pandoc README.md \
-  --pdf-engine=xelatex \
-  --variable=geometry:margin=1in \
-  --variable=fontsize:11pt \
-  --variable=mainfont:"DejaVu Sans" \
-  --variable=monofont:"DejaVu Sans Mono" \
-  --variable=colorlinks:true \
-  --toc \
-  --number-sections \
-  --output=Mastering-New-Python-Libraries.pdf
-```
-
-### 🔄 Automation Options
-
-#### Pre-commit Hook
-
-A Git pre-commit hook automatically converts the README to a notebook when you commit changes:
-
-```bash
-# The hook is already installed at .git/hooks/pre-commit
-# It will automatically run when you commit changes to README.md
-git add README.md
-git commit -m "feat: add new exploration techniques"
-# Notebook is automatically generated and added to commit
-```
-
-#### GitHub Actions
-
-Two GitHub Actions workflows automatically build artifacts:
-
-1. **PDF Build** (`.github/workflows/build-pdf.yml`):
-   - Triggers on tags and README changes
-   - Creates semantic versions from commit messages
-   - Generates PDF with professional formatting
-   - Creates GitHub releases on tags
-   - Comments on PRs with artifact information
-
-2. **Notebook Build** (`.github/workflows/build-notebook.yml`):
-   - Triggers on README changes
-   - Converts README to interactive notebook
-   - Uploads notebook as artifact
-   - Comments on PRs with notebook statistics
-
-#### Makefile Commands
-
-```bash
-make help          # Show all available commands
-make notebook      # Convert README to notebook
-make pdf           # Build PDF from README
-make all           # Build both notebook and PDF
-make clean         # Remove generated files
-make install       # Install dependencies with Rye
-make sync          # Sync Rye environment
-```
-
-#### VS Code Tasks
-
-VS Code tasks are configured in `.vscode/tasks.json`:
-
-- **Build Notebook**: Convert README to Jupyter notebook
-- **Build PDF**: Generate PDF from README
-- **Build All**: Run both notebook and PDF builds
-- **Open Notebook**: Launch Jupyter notebook
-
-Access via `Cmd+Shift+P` → "Tasks: Run Task"
-
-### 🎯 Use Cases
-
-#### For Learners
-- **Interactive Exploration**: Run all code examples directly in the notebook
-- **Shell Commands**: Execute `pip install` and other commands without leaving the notebook
-- **Progressive Learning**: Work through examples step-by-step with immediate feedback
-
-#### For Educators
-- **Live Demonstrations**: Use the notebook for live coding sessions
-- **Student Assignments**: Distribute the notebook for hands-on learning
-- **Version Control**: Track changes to examples and explanations
-
-#### For Documentation
-- **Living Documentation**: Keep code examples synchronized with documentation
-- **Multiple Formats**: Maintain both markdown and notebook versions
-- **Automated Updates**: Ensure consistency across all formats
-
-### 🔧 Configuration
-
-#### Customizing the Conversion
-
-```bash
-# Modify convert_to_notebook.py for custom behavior
-python3 convert_to_notebook.py README.md \
-  --output custom-notebook.ipynb \
-  --no-setup \
-  --no-toc
-```
-
-#### Dependencies
-
-The conversion requires:
-- `jupyter` and `ipython` for notebook viewing and shell command execution
-- `pandoc` for PDF generation
-
-Install with:
-```bash
-rye sync  # Installs all dependencies
-```
-
-#### Environment Setup
-
-For optimal notebook experience:
-```bash
-# Install Jupyter extensions
-pip install jupyter_contrib_nbextensions
-jupyter contrib nbextension install --user
-
-# Enable useful extensions
-jupyter nbextension enable toc2/main  # Table of contents
-jupyter nbextension enable codefolding/main  # Code folding
-```
-
-### 🚀 Advanced Features
-
-#### Custom Cell Processing
-
-The conversion script can be extended to:
-- Add custom imports based on code content
-- Generate test cells for code examples
-- Add performance profiling cells
-- Include interactive visualizations
-
-#### Integration with Other Tools
-
-- **nbconvert**: Convert notebooks to other formats (HTML, slides, etc.)
-- **papermill**: Parameterize notebooks for batch processing
-- **jupytext**: Sync notebooks with markdown files
-
-#### Continuous Integration
-
-The automation works seamlessly with:
-- **GitHub Actions**: Automated builds on every change
-- **GitLab CI**: Similar workflows for GitLab repositories
-- **Local Development**: Pre-commit hooks for immediate feedback
-
-This automation system ensures that your documentation stays current, interactive, and accessible in multiple formats while maintaining the quality and consistency of your learning materials.
-
-def minimal():
-    pass
+- **Shell/bash commands** become terminal cells using `%%bash`
